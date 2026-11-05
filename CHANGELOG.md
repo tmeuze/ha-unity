@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.1.0 (unreleased)
+- Docs: added docs/architecture.md (planned integration design) and rewrote the README roadmap.
 - Verified live: light RGB colour, colour temperature, xy, effects and brightness; fan speed, preset, oscillation and on/off. Docs updated.
 - Example hub heartbeat also triggers on the MQTT birth message, so the retained "online" is restored after the broker publishes the will (previously only on HA start).
 - Docs: status now states exactly what was verified live; README notes Unity is not ha-propsense and that rules/UI belong to that project. Blueprint headers no longer claim end-to-end verification for everything.

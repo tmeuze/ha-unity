@@ -78,12 +78,15 @@ headers accurate when you change what has been run live.
   parent), per-device renaming for access control (names carry no policy; area
   and label do), and a `last_triggered` trick for override expiry (it fires on
   every trigger; the shipped design is `wait_for_trigger` in parallel mode).
-- **Narrow blueprint component; no UI integration.** Decided 2026-10-06: ha-unity
-  will not become a full integration. The separate **ha-propsense** project (not
-  the former name of this repo, despite sharing it) is the HACS integration with
-  UI for label-driven rules. ha-unity should eventually rely on it for tagging
-  and rules, likely as a "grant to child instance" action. Keep the dependency
-  pointing from ha-unity to ha-propsense; do not build a rules engine here.
+- **Direction (decided 2026-11-05, supersedes the earlier "narrow component"
+  note): Unity becomes a HACS custom integration in this repo** (hub and child
+  roles, MQTT communication plane, child falls back to its last known-good
+  config, dashboards and resource manifests later), built once tested. The
+  blueprints stay as the lightweight option and the behavioural reference.
+  **PropSense is a distinct project** for single-instance users; Unity may use
+  it as engine/dependency or become an extension of it, undecided. Full design
+  and open questions: `docs/architecture.md`. Do not start building before the
+  spikes in that document are done.
 - **Excluded on purpose:** locks, alarm panels, cameras, scripts. Media players
   have no MQTT platform, so they are unsupported, not merely unbuilt.
 - **Scenes are a privilege**: their contents are not checked and may touch
@@ -195,7 +198,7 @@ is five commits from the building session.
 5. Known gaps: stale retained discovery when an entity is deleted from the hub
    entirely; cover tilt; light transitions; expiry countdowns lost on HA
    restart; the state blueprint's per-event filtering cost on very large hubs.
-6. Design the ha-propsense hand-off (see Design decisions) when that project is ready.
+6. Follow the phases in `docs/architecture.md` (spikes next, then skeleton).
 
 ## Conventions
 - No private names in this repo. Fixtures use `alpha`/`beta`/`shared`/`hub`.

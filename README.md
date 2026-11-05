@@ -79,6 +79,7 @@ use, and per-instance broker users (see
 - [How it works](docs/how-it-works.md): triggers, topics, what runs when.
 - [Security model](docs/security-model.md): the guarantees, and what you must still do.
 - [Testing](docs/testing.md): offline suite, live checks, negative tests.
+- [Architecture (design, not built)](docs/architecture.md): the planned integration.
 - [Releasing](RELEASING.md): tags, and how the import buttons get your owner and version.
 
 ## Limits you should know
@@ -94,11 +95,13 @@ use, and per-instance broker users (see
 - Synthetic climate is the least-tested blueprint: its policy, clamp and payload logic are tested offline, but the call into your climate entity is not, and guest-override expiry is lost on a Home Assistant restart.
 
 ## Roadmap
-Unity stays a narrow, blueprint-based component for syncing entities between
-Home Assistant instances. It will not grow its own rules engine or UI. Tagging
-and rules are expected to move to the separate ha-propsense project (for
-example as a "grant to child instance" action) with Unity depending on it.
-Nothing of that exists yet. Known gaps are listed under Limits.
+The blueprints are the tested baseline. The plan is a HACS custom integration
+in this same repository, with a hub role and a child role, a versioned MQTT
+communication plane, and a child that falls back to its last known-good
+configuration when a sync fails. Dashboards and their frontend resources are a
+later phase. PropSense (a separate project for single-instance users) may become
+Unity's rules engine, or Unity may become an extension of it; that is undecided.
+Nothing of this exists yet. See [docs/architecture.md](docs/architecture.md).
 
 ## Tests
 
