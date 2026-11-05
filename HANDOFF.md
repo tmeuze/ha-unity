@@ -16,9 +16,8 @@ integration owns all MQTT; users create no automations. Fail closed:
 an entity is exposed only if (unit label AND area on a unit floor) OR (common
 label AND area on a common floor), and its domain is on a fixed list.
 
-- Repo: `github.com/tmeuze/ha-unity`. The integration lives on branch
-  `feat/integration` until the owner approves merging to `main` (HACS pulls
-  the default branch).
+- Repo: `github.com/tmeuze/ha-unity`. The integration is merged to `main`
+  (HACS pulls the default branch). CI (hassfest, HACS, tests) is green.
 - Formerly named **PropSense**. See "Rename" below for what that changed.
 - Version: integration `0.2.0`, **not yet run live**; blueprints were `0.1.0`.
   No git tags yet.
