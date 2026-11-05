@@ -1,0 +1,14 @@
+{
+  "domain": "unity",
+  "name": "Unity",
+  "codeowners": ["@tmeuze"],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://github.com/tmeuze/ha-unity#readme",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/tmeuze/ha-unity/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.2.0"
+}
