@@ -1,5 +1,7 @@
 # Testing
 
+> These notes describe the legacy blueprints. The integration is described in [architecture.md](architecture.md).
+
 ## Offline (no Home Assistant needed)
 ```bash
 python tests/policy_model.py        # whitelist model + ACL example, standard library only

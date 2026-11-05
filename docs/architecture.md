@@ -1,16 +1,36 @@
 # Unity architecture (design, not yet built)
 
-Status: **proposal**. Nothing in this document exists yet except where it says
-"today". The blueprints in `blueprints/` are the shipped, tested baseline and
-stay supported until the integration reproduces what they do.
+Status: the **hub role is built (0.2.0)**; the rest is proposal. What exists is
+listed under "Implemented"; everything else in this document is design only.
+The blueprints in `blueprints/` are legacy; they remain for climate and as the
+behavioural reference.
+
+## Implemented (0.2.0, not yet run live)
+
+- Hub config entry plus one **config subentry per child** (UI: add, edit,
+  delete). No automations or blueprints are needed.
+- Pure Python core: `policy.py` (the whitelist), `topics.py` (the topic scheme
+  and validation), `adapters.py` (per-domain discovery, state and validated
+  commands), covered by unit tests ported from the verified blueprints.
+- `manager.py` owns the MQTT plane: retained discovery, state and availability;
+  persisted revocation (stale topics are cleaned up); policy re-checked on every
+  command; retained commands never executed; hub marker re-announced on every
+  MQTT reconnect.
+- Diagnostics. HACS packaging and CI.
+
+Not implemented yet: climate (still a blueprint), the child-side component and
+last-known-good pipeline, dashboards and resource manifests, a per-child status
+sensor, any PropSense integration.
 
 ## Decisions so far
 
 - Unity becomes a **HACS custom integration** built into this repository, after
   it has been tested. The blueprints remain as the lightweight option.
 - One integration, two roles: **hub** (publishes) and **child** (receives).
-- The hub-to-child **communication plane stays MQTT**. No component on the
-  parent holds a credential for a child.
+- The hub-to-child **communication plane stays MQTT**, and the integration
+  owns it (decided 2026-11-05): users configure a hub and children in the UI
+  and create no automations. No component on the parent holds a credential for
+  a child.
 - A failed sync must never leave a child worse off: the child **falls back to
   its last known-good configuration** (see below).
 - **PropSense is a distinct project.** It serves single-instance users who

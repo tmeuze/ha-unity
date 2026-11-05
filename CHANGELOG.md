@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0
+- New: Unity is a HACS integration. A hub config entry plus one subentry per
+  child replaces the discovery, state and command-bridge automations and the
+  heartbeat automation. The integration owns all MQTT.
+- Policy, topic scheme, adapters and command validation ported to tested Python
+  (`policy.py`, `topics.py`, `adapters.py`), with 120+ automated tests.
+- Stale retained topics (deleted entity, removed child) are cleaned up; what
+  was published is persisted.
+- The hub status marker is re-announced on every MQTT reconnect.
+- Retained commands are never executed. Unit names and the hub status topic are
+  validated (no wildcards or slashes).
+- Diagnostics show what each child may see.
+- Not yet in the integration: climate (still a blueprint). Not yet run live.
+- Docs: README rewritten, migration guide, blueprints kept as legacy.
+
 ## 0.1.0 (unreleased)
 - Fix: discovery now uses the device name you set on the hub (name_by_user) instead of the integration's default name (e.g. a Matter device's default). Two new render tests cover it.
 - Docs: added docs/architecture.md (planned integration design) and rewrote the README roadmap.

@@ -1,6 +1,6 @@
 # Unity (pre-1.0): synthetic climate. The policy, clamp, topic and payload
 # logic are tested offline; the call into your climate entity is not (it depends
-# on your controller). See docs/testing.md.
+# on your controller). See docs/blueprints-testing.md.
 #
 # On the hub, publish ONE synthetic climate entity to a unit, built from hub
 # entities instead of a thermostat's own display. One automation per room per

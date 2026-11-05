@@ -1,22 +1,21 @@
 # Releasing
 
-The import buttons in the README and each blueprint's `source_url` point at a
-GitHub owner and a version. Releases are git tags.
+Unity is installed through HACS from this repository.
 
-1. Run the tests: `python tests/policy_model.py` and
-   `python tests/render_blueprints.py`.
-2. Update `CHANGELOG.md`.
-3. Point the links at the new tag (use `main` for "latest"):
+1. Run the tests: `python -m pytest -q`, `python tests/policy_model.py` and
+   `python tests/render_blueprints.py` (in the `ha-unity` pyenv environment).
+2. Bump the version in `custom_components/unity/manifest.json` and
+   `pyproject.toml`, and update `CHANGELOG.md`.
+3. Commit, tag and push:
    ```bash
-   python scripts/set_repo.py --owner YOUR_GITHUB_NAME --version v0.1.0
+   git add -A && git commit -m "Release vX.Y.Z"
+   git tag vX.Y.Z && git push && git push --tags
    ```
-4. Commit, tag and push:
-   ```bash
-   git add -A && git commit -m "Release v0.1.0"
-   git tag v0.1.0 && git push && git push --tags
-   ```
-5. Create a GitHub release for the tag with the changelog entry.
+4. Create a GitHub release for the tag with the changelog entry. HACS offers
+   releases as versions; without a release it tracks the default branch.
 
-Users who want stability import from a tag URL; users who want updates import
-from `main` and use **Re-import blueprint** in Home Assistant. A blueprint
-change only takes effect after automations are reloaded.
+CI (`.github/workflows/validate.yml`) runs hassfest, the HACS validation and the
+tests on every push.
+
+The blueprint import links in `docs/blueprints.md` and each blueprint's
+`source_url` point at `main`; `scripts/set_repo.py` rewrites them if you fork.

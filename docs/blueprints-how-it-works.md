@@ -1,5 +1,7 @@
 # How Unity works
 
+> These notes describe the legacy blueprints. The integration is described in [architecture.md](architecture.md).
+
 ## Roles
 - **Hub:** the Home Assistant instance that owns devices and integrations.
 - **Unit:** a Home Assistant instance that only receives what the hub publishes.

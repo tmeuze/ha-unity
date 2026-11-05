@@ -346,3 +346,15 @@ async def test_a_child_with_an_invalid_unit_name_is_ignored(hass, mqtt_mock, wor
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert not any(t.startswith("bad") for t in published(mqtt_mock))
+
+
+async def test_diagnostics(hass, mqtt_mock, world) -> None:
+    from custom_components.unity.diagnostics import async_get_config_entry_diagnostics
+
+    cmd_world(hass, world)
+    entry = await setup_hub(hass, world)
+    diag = await async_get_config_entry_diagnostics(hass, entry)
+    by_unit = {c["unit"]: c for c in diag["children"]}
+    assert by_unit["alpha"]["exposed"] == ["light.alpha_lamp", "switch.hall"]
+    assert by_unit["beta"]["exposed"] == ["light.beta_lamp", "switch.hall"]
+    assert diag["hub"]["status_topic"] == "ha-unity/hub/status"
