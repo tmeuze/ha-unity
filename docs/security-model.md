@@ -6,13 +6,17 @@
 - **Strict label/floor pairs.** A unit label on a common-floor entity, or a
   common label on a unit floor, exposes nothing. A tagging mistake alone never
   leaks an entity.
-- **A fixed domain list.** Only light, switch, sensor, binary sensor, fan, scene and cover (and the climate blueprint) are handled. Locks, alarm panels, cameras, scripts and automations are not. The domain list is not an input.
+- **A fixed domain list.** Only light, switch, sensor, binary sensor, fan, scene and cover (the climate blueprint is separate) are handled. Locks, alarm panels, cameras, scripts and automations are not. The domain list is not an input.
 - **Safer covers.** Garage, gate and door covers are blocked by default, and an unavailable cover is never exposed.
 - **Commands are validated twice.** The broker ACL limits what a unit may
   publish; the hub re-checks the whitelist on every command and uses hardcoded
   services. The entity comes from the topic, never the payload.
 - **Revocation.** Removing a label, area or floor clears discovery within
-  seconds (debounce) and stops commands immediately.
+  seconds (debounce) and stops commands immediately, because the policy is
+  re-checked on every command. Deleting an entity, or removing a child, also
+  clears the retained topics (what was published is persisted).
+- **Retained commands are never executed**, so a command left on the broker
+  cannot fire when the hub restarts.
 
 ## What you must still do
 1. **Broker ACLs.** Replace the broker's default allow-all rule with
@@ -21,7 +25,7 @@
    read or write device-bridge topics, discovery prefixes or other units.
 2. **Test the denials**, not just the allows: publish a command for another
    unit's entity, and to another unit's topic, and confirm nothing happens
-   ([testing.md](testing.md)).
+   ([blueprints-testing.md](blueprints-testing.md) describes the checks).
 3. **Keep privileged integrations on the hub only** (radios, locks, cloud
    accounts, controllers). Units need no token to the hub.
 4. **Treat label/area edits on the hub as access control.** Anyone who can

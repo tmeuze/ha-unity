@@ -8,45 +8,49 @@ unless it is in the verified-live list below.
 ## What this is
 Naming: the project is called **Unity** in prose and display names; `ha-unity` is only the repo slug, file names, URLs and the MQTT topic prefix.
 
-Home Assistant blueprints (not a custom integration) that publish selected
-entities from one **hub** instance to other instances (**units**) over MQTT
-discovery, driven by labels, floors and areas set in the hub's UI. Fail closed:
+A HACS integration (0.2.0, hub role built; the earlier blueprints are legacy)
+that publishes selected entities from one **hub** instance to other instances
+(**children**, also called units) over MQTT discovery, driven by labels,
+floors and areas set in the hub's UI, and takes validated commands back. The
+integration owns all MQTT; users create no automations. Fail closed:
 an entity is exposed only if (unit label AND area on a unit floor) OR (common
 label AND area on a common floor), and its domain is on a fixed list.
 
-- Repo: `github.com/tmeuze/ha-unity` (branch `main`, in sync with local at the
-  time of writing).
+- Repo: `github.com/tmeuze/ha-unity`. The integration lives on branch
+  `feat/integration` until the owner approves merging to `main` (HACS pulls
+  the default branch).
 - Formerly named **PropSense**. See "Rename" below for what that changed.
-- Version: `0.1.0 (unreleased)`, pre-1.0. No git tags yet.
+- Version: integration `0.2.0`, **not yet run live**; blueprints were `0.1.0`.
+  No git tags yet.
 - License: MIT. Git identity is the owner's; commits end with the
   `Co-Authored-By: Claude ...` trailer the session reminder specifies. **Only
   push when the user asks.**
 
 ## Layout
 ```
-blueprints/automation/ha_unity/
-  ha_unity_publish_discovery.yaml   retained MQTT discovery; revokes stale
-  ha_unity_publish_state.yaml       retained state + availability
-  ha_unity_command_bridge.yaml      the only path from a unit command to a real entity
-  ha_unity_climate.yaml             synthetic thermostat (separate whitelist check)
-docs/            how-it-works, security-model, testing, emqx-acl-example.conf
-examples/hub_heartbeat.yaml         publishes the retained "online" marker
-scripts/set_repo.py                 rewrites README import links and blueprint source_url
-tests/policy_model.py               stdlib: whitelist model + ACL file evaluator
-tests/render_blueprints.py          renders the REAL templates with Jinja2 + stubbed HA
-README.md  CHANGELOG.md  RELEASING.md  LICENSE
+custom_components/unity/   the HACS integration (0.2.0, hub role)
+  policy.py topics.py adapters.py   pure Python, no HA imports
+  snapshot.py manager.py            registries -> facts; the MQTT plane
+  config_flow.py __init__.py diagnostics.py const.py strings.json translations/
+blueprints/automation/ha_unity/     LEGACY blueprints (climate still lives here)
+docs/            architecture, security-model, migration, blueprints*, emqx-acl-example.conf
+tests/           test_policy/topics/adapters (pure) + integration/ (HA harness)
+                 policy_model.py + render_blueprints.py = legacy blueprint suites
+hacs.json  .github/workflows/validate.yml  requirements-test.txt  pyproject.toml
 ```
 
-## Run the tests (no Home Assistant needed)
+## Run the tests (pyenv virtualenv `ha-unity`, see ~/.claude/CLAUDE.md)
 ```bash
-python3 tests/policy_model.py                  # 63 PASS lines, ends "all checks passed"
-python tests/render_blueprints.py              # 172 PASS lines; needs PyYAML + Jinja2
+pyenv local ha-unity                 # .python-version is gitignored
+pip install -r requirements-test.txt
+python -m pytest -q                  # 120+ tests: pure logic + HA integration
+python tests/policy_model.py         # legacy blueprint suites
+python tests/render_blueprints.py
 ```
-`render_blueprints.py` needs a venv with `pyyaml` and `jinja2` (the author's is
-a pyenv env named `.venv`; create your own if missing, with the user's OK to
-download). Both suites passed on 2026-10-06 and a private-name scan was clean.
+Note: the harness installs a newer Home Assistant (2026.10.x) than the test
+instances run (2026.9.x); `hacs.json` says 2026.9.0, which is not tested.
 
-**Mutation habit (important):** every time you change a template, deliberately
+**Mutation habit (important):** every time you change a guard in `policy.py`, `topics.py`, `adapters.py` or `manager.py` (or a blueprint template), deliberately
 break it (drop a clamp, remove a feature check, widen a domain) in a temp copy
 and confirm a test fails. This caught real mistakes. The ad-hoc harness is not
 committed yet: copy `BP/*.yaml` to a temp dir, apply one `str.replace`, point

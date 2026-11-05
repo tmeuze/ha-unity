@@ -1,0 +1,91 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Unity hub",
+        "description": "Settings shared by every child instance. Add each child afterwards with “Add child instance”. Children only ever see entities that carry their label on one of their floors, or the common label on a common floor.",
+        "data": {
+          "common_label": "Common label",
+          "common_floors": "Common floors",
+          "hub_status_topic": "Hub status topic",
+          "area_prefix_regex": "Area prefix to strip",
+          "blocked_cover_classes": "Blocked cover classes"
+        },
+        "data_description": {
+          "common_label": "Entities with this label are shown to every child, if they are in an area on a common floor.",
+          "common_floors": "Floors the common label is valid on. The label and a floor are both required.",
+          "hub_status_topic": "Retained topic that reads “online” while this hub is up. Set your MQTT will message to “offline” on the same topic.",
+          "area_prefix_regex": "Optional regex for a prefix on hub area names that must not reach a child (for example ^L[0-9]+ turns “L2 Kitchen” into “Kitchen”).",
+          "blocked_cover_classes": "Covers of these device classes are never shown to a child."
+        }
+      }
+    },
+    "error": {
+      "invalid_topic": "Use a concrete topic without wildcards or empty levels.",
+      "invalid_regex": "That is not a valid regular expression.",
+      "common_pair": "Set both the common label and the common floors, or neither."
+    },
+    "abort": {
+      "single_instance_allowed": "Unity is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Unity hub settings",
+        "data": {
+          "common_label": "Common label",
+          "common_floors": "Common floors",
+          "hub_status_topic": "Hub status topic",
+          "area_prefix_regex": "Area prefix to strip",
+          "blocked_cover_classes": "Blocked cover classes"
+        }
+      }
+    },
+    "error": {
+      "invalid_topic": "Use a concrete topic without wildcards or empty levels.",
+      "invalid_regex": "That is not a valid regular expression.",
+      "common_pair": "Set both the common label and the common floors, or neither."
+    }
+  },
+  "config_subentries": {
+    "child": {
+      "initiate_flow": {
+        "user": "Add child instance"
+      },
+      "entry_type": "Child instance",
+      "step": {
+        "user": {
+          "title": "Add child instance",
+          "description": "A child sees only entities with its label that are in an area on one of its floors.",
+          "data": {
+            "unit": "Unit name",
+            "unit_label": "Label",
+            "unit_floors": "Floors"
+          },
+          "data_description": {
+            "unit": "Lowercase letters, digits, “-” and “_”. It becomes the first level of every MQTT topic for this child, so it must match what the broker allows that child to use.",
+            "unit_label": "Entities with this label are shown to this child.",
+            "unit_floors": "The label only counts on these floors."
+          }
+        },
+        "reconfigure": {
+          "title": "Edit child instance",
+          "data": {
+            "unit": "Unit name",
+            "unit_label": "Label",
+            "unit_floors": "Floors"
+          }
+        }
+      },
+      "error": {
+        "invalid_unit": "Use lowercase letters, digits, “-” and “_” (no slashes or wildcards).",
+        "duplicate_unit": "A child with this name already exists.",
+        "no_floors": "Choose at least one floor."
+      },
+      "abort": {
+        "reconfigure_successful": "Child updated."
+      }
+    }
+  }
+}

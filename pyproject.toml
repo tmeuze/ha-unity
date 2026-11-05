@@ -1,0 +1,17 @@
+[project]
+name = "ha-unity"
+version = "0.2.0"
+description = "Home Assistant integration: grant selected entities to child instances over MQTT"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.14"
+# The integration has no runtime requirements of its own (see manifest.json);
+# Home Assistant supplies everything it imports.
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest-homeassistant-custom-component"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
