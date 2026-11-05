@@ -8,16 +8,20 @@ unless it is in the verified-live list below.
 ## What this is
 Naming: the project is called **Unity** in prose and display names; `ha-unity` is only the repo slug, file names, URLs and the MQTT topic prefix.
 
-Home Assistant blueprints (not a custom integration) that publish selected
-entities from one **hub** instance to other instances (**units**) over MQTT
-discovery, driven by labels, floors and areas set in the hub's UI. Fail closed:
+A HACS integration (0.2.0, hub role built; the earlier blueprints are legacy)
+that publishes selected entities from one **hub** instance to other instances
+(**children**, also called units) over MQTT discovery, driven by labels,
+floors and areas set in the hub's UI, and takes validated commands back. The
+integration owns all MQTT; users create no automations. Fail closed:
 an entity is exposed only if (unit label AND area on a unit floor) OR (common
 label AND area on a common floor), and its domain is on a fixed list.
 
-- Repo: `github.com/tmeuze/ha-unity` (branch `main`, in sync with local at the
-  time of writing).
+- Repo: `github.com/tmeuze/ha-unity`. The integration lives on branch
+  `feat/integration` until the owner approves merging to `main` (HACS pulls
+  the default branch).
 - Formerly named **PropSense**. See "Rename" below for what that changed.
-- Version: `0.1.0 (unreleased)`, pre-1.0. No git tags yet.
+- Version: integration `0.2.0`, **not yet run live**; blueprints were `0.1.0`.
+  No git tags yet.
 - License: MIT. Git identity is the owner's; commits end with the
   `Co-Authored-By: Claude ...` trailer the session reminder specifies. **Only
   push when the user asks.**
