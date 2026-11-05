@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.1.0 (unreleased)
+- Fix: discovery now uses the device name you set on the hub (name_by_user) instead of the integration's default name (e.g. a Matter device's default). Two new render tests cover it.
 - Docs: added docs/architecture.md (planned integration design) and rewrote the README roadmap.
 - Verified live: light RGB colour, colour temperature, xy, effects and brightness; fan speed, preset, oscillation and on/off. Docs updated.
 - Example hub heartbeat also triggers on the MQTT birth message, so the retained "online" is restored after the broker publishes the will (previously only on HA start).

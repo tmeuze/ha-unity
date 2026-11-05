@@ -80,13 +80,18 @@ def env_for(world_states, attrs=None):
     env.globals.update(
         area_name=area_name,
         device_id=lambda e: ("dev_" + e.split(".")[1]) if e in pm.ENTITIES else None,
-        device_attr=lambda d, a: d.replace("dev_", "").replace("_", " ").title(),
+        device_attr=lambda d, a: (USER_DEVICE_NAMES.get(d) if a == "name_by_user"
+                                  else d.replace("dev_", "").replace("_", " ").title()),
     )
     env.tests["match"] = lambda v, pat: re.match(pat, str(v)) is not None
     env.filters["regex_replace"] = lambda v, pat, rep="": re.sub(pat, rep, str(v))
     env.filters["to_json"] = lambda v: json.dumps(v)
     env.filters["combine"] = lambda a, b: {**a, **b}
     return env
+
+
+# Devices the user renamed on the hub (name_by_user); others have none.
+USER_DEVICE_NAMES = {"dev_kitchen_pendant": "Pendant (renamed)"}
 
 
 def render(env, tpl, ctx):
@@ -287,6 +292,11 @@ def test_payloads():
         check(f"suggested_area {eid}: {expect_sa}", dev.get("suggested_area") == expect_sa)
         check(f"device block {eid}: identifiers scoped to unit",
               dev["identifiers"][0].startswith("alpha_dev_"))
+    # user-set device name wins over the integration default; otherwise default
+    ctx = run_vars(env, var_step, inputs, dict(ctx0, repeat={"item": "light.kitchen_pendant"}))
+    check("device name uses name_by_user when set", ctx["device"]["name"] == "Pendant (renamed)")
+    ctx = run_vars(env, var_step, inputs, dict(ctx0, repeat={"item": "light.alpha_lamp"}))
+    check("device name falls back to the default name", ctx["device"]["name"] == "Alpha Lamp")
     # configurable inputs: custom hub topic; empty prefix rule strips nothing
     ctx = run_vars(env, var_step, inputs, {"repeat": {"item": "light.kitchen_pendant"}, "unit": "alpha",
                                             "area_prefix": "", "hub_status_topic": "custom/hub/up",

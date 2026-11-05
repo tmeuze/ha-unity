@@ -178,7 +178,9 @@ actions:
             sa: >-
               {% if area_nm and area_prefix and area_nm is match(area_prefix) -%}{{ area_nm | regex_replace(area_prefix, '') }}{%- elif area_nm and area_nm in common_area_names -%}{{ area_nm }}{%- endif %}
             dev_id: "{{ device_id(repeat.item) }}"
-            dev_name: "{{ device_attr(dev_id, 'name') if dev_id else state_attr(repeat.item, 'friendly_name') }}"
+            # A name the user set on the hub (name_by_user) wins over the
+            # integration's default (e.g. the Matter device name).
+            dev_name: "{{ (device_attr(dev_id, 'name_by_user') or device_attr(dev_id, 'name')) if dev_id else state_attr(repeat.item, 'friendly_name') }}"
             fname: "{{ state_attr(repeat.item, 'friendly_name') }}"
             # MQTT entities with a device are named "<device> <entity name>", so
             # sending the full friendly name doubles it. Send null when the
