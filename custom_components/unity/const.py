@@ -19,6 +19,17 @@ CONF_UNIT_LABEL = "unit_label"
 CONF_UNIT_FLOORS = "unit_floors"
 SUBENTRY_CHILD = "child"
 
+# Climate (thermostat) subentry data.
+SUBENTRY_CLIMATE = "climate"
+CONF_OBJECT = "object"
+CONF_CLIMATE_ENTITY = "climate_entity"
+CONF_CURRENT_SENSOR = "current_sensor"
+CONF_TARGET_SENSOR = "target_sensor"
+CONF_MIN_TEMP = "min_temp"
+CONF_MAX_TEMP = "max_temp"
+CONF_EXPIRE_AFTER = "expire_after_minutes"
+CONF_EXPIRE_MODE = "expire_mode"
+
 DEFAULT_HUB_STATUS = DEFAULT_HUB_STATUS_TOPIC
 DEFAULT_BLOCKED = sorted(DEFAULT_BLOCKED_COVER_CLASSES)
 COVER_CLASSES = [

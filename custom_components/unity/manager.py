@@ -43,6 +43,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.storage import Store
 
 from . import adapters, snapshot
+from .climate_runtime import ClimateController
 from .const import (
     CONF_AREA_PREFIX,
     CONF_BLOCKED_COVER_CLASSES,
@@ -70,6 +71,7 @@ from .policy import (
     is_exposed,
 )
 from .topics import (
+    climate_discovery_topic,
     discovery_topic,
     entity_base,
     parse_command_topic,
@@ -97,6 +99,7 @@ class ChildStatus:
 
     unit: str
     exposed: tuple[str, ...]
+    climate: tuple[str, ...] = ()
 
 
 def hub_policy_from(data: dict[str, Any]) -> HubPolicy:
@@ -137,7 +140,7 @@ class UnityHub:
         self.status_topic = topic if valid_hub_status_topic(topic) else DEFAULT_HUB_STATUS
         self.area_prefix: str = entry.data.get(CONF_AREA_PREFIX) or ""
 
-        self._store: Store[dict[str, list[str]]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.published")
+        self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.published")
         # unit -> entity ids whose discovery is currently published
         self._published: dict[str, set[str]] = {}
         # unit -> entity ids currently exposed (current view, for status/UI)
@@ -149,13 +152,15 @@ class UnityHub:
         self._state_unsub: CALLBACK_TYPE | None = None
         self._debounce: CALLBACK_TYPE | None = None
         self._lock = asyncio.Lock()
-        self._command_slots = asyncio.Semaphore(_MAX_CONCURRENT_COMMANDS)
+        self.command_slots = asyncio.Semaphore(_MAX_CONCURRENT_COMMANDS)
         self._stopped = False
+        self.climate = ClimateController(self)
 
     # ------------------------------------------------------------------ life
     async def async_start(self) -> None:
-        stored = await self._store.async_load() or {}
-        self._published = {unit: set(ids) for unit, ids in stored.items()}
+        entities, climate_published, deadlines = parse_store(await self._store.async_load())
+        self._published = {unit: set(ids) for unit, ids in entities.items()}
+        self.climate.restore(climate_published, deadlines)
 
         for unit in self.children:
             self._unsubs.append(
@@ -166,6 +171,7 @@ class UnityHub:
                     qos=0,
                 )
             )
+        self._unsubs.extend(await self.climate.async_subscribe())
         for event_type in _REGISTRY_EVENTS:
             self._unsubs.append(self.hass.bus.async_listen(event_type, self._on_registry_event))
         self._unsubs.append(mqtt.async_subscribe_connection_status(self.hass, self._on_mqtt_status))
@@ -176,9 +182,11 @@ class UnityHub:
         )
         await self._announce_online()
         await self.async_resync(force=True)
+        await self.climate.async_arm_restored()
 
     async def async_stop(self) -> None:
         self._stopped = True
+        self.climate.stop()
         if self._debounce:
             self._debounce()
             self._debounce = None
@@ -200,8 +208,23 @@ class UnityHub:
     async def _announce_online(self) -> None:
         await mqtt.async_publish(self.hass, self.status_topic, "online", qos=0, retain=True)
 
-    def _serialise(self) -> dict[str, list[str]]:
-        return {unit: sorted(ids) for unit, ids in self._published.items() if ids}
+    def _serialise(self) -> dict[str, Any]:
+        published, expiry = self.climate.serialise()
+        return {
+            "entities": {unit: sorted(ids) for unit, ids in self._published.items() if ids},
+            "climate": published,
+            "expiry": expiry,
+        }
+
+    # Used by the climate controller (same retained-publish dedupe and save).
+    async def publish(self, topic: str, payload: str, *, force: bool = False) -> None:
+        await self._publish(topic, payload, force=force)
+
+    def forget(self, topic: str) -> None:
+        self._sent.pop(topic, None)
+
+    def save_soon(self) -> None:
+        self._store.async_delay_save(self._serialise, 1)
 
     def _facts_for(self, unit: str) -> dict[str, EntityFacts]:
         return self.exposed.get(unit, {})
@@ -260,8 +283,9 @@ class UnityHub:
                     have.add(entity_id)
                     await self._publish_state(unit, f)
             self.exposed = new_exposed
+            await self.climate.async_resync(floors)
             self._retrack_states()
-            self._store.async_delay_save(self._serialise, 1)
+            self.save_soon()
 
     # ------------------------------------------------------------ state events
     def _retrack_states(self) -> None:
@@ -269,6 +293,7 @@ class UnityHub:
             self._state_unsub()
             self._state_unsub = None
         tracked = {eid for per_unit in self.exposed.values() for eid in per_unit}
+        tracked |= self.climate.watched()
         if tracked:
             self._state_unsub = async_track_state_change_event(
                 self.hass, sorted(tracked), self._on_state_change
@@ -281,11 +306,15 @@ class UnityHub:
     async def _handle_state_change(self, entity_id: str) -> None:
         if self._stopped:
             return
+        floors = snapshot.floor_areas(self.hass)
+        if self.climate.watches(entity_id) and await self.climate.async_state_changed(entity_id, floors):
+            self._schedule_resync()          # a thermostat's grant changed
+        if not any(entity_id in per_unit for per_unit in self.exposed.values()):
+            return
         facts = snapshot.entity_facts(self.hass, entity_id)
         if facts is None:
             self._schedule_resync()
             return
-        floors = snapshot.floor_areas(self.hass)
         for unit, child in self.children.items():
             was = entity_id in self._facts_for(unit)
             now = is_exposed(facts, child, self.policy, floors)
@@ -354,7 +383,7 @@ class UnityHub:
             _LOGGER.debug("Ignoring command from %s for %s: not exposed", unit, entity_id)
             return []
         calls = adapters.command_calls(facts, payload)
-        async with self._command_slots:
+        async with self.command_slots:
             for call in calls:
                 try:
                     await self.hass.services.async_call(
@@ -372,20 +401,38 @@ class UnityHub:
     # ------------------------------------------------------------------ status
     def status(self) -> list[ChildStatus]:
         return [
-            ChildStatus(unit=unit, exposed=tuple(sorted(self.exposed.get(unit, {}))))
+            ChildStatus(
+                unit=unit,
+                exposed=tuple(sorted(self.exposed.get(unit, {}))),
+                climate=tuple(sorted(obj for (u, obj) in self.climate.granted if u == unit)),
+            )
             for unit in self.children
         ]
 
 
+def parse_store(stored: dict[str, Any] | None) -> tuple[dict[str, list[str]], dict[str, list[str]], dict[str, float]]:
+    """Read the persisted state. 0.2.x stored just ``{unit: [entity ids]}``."""
+    stored = stored or {}
+    if any(k in stored for k in ("entities", "climate", "expiry")):
+        return stored.get("entities") or {}, stored.get("climate") or {}, stored.get("expiry") or {}
+    return {u: v for u, v in stored.items() if isinstance(v, list)}, {}, {}
+
+
 async def async_remove_hub_data(hass: HomeAssistant, status_topic: str) -> None:
     """Called when the hub entry is deleted: clear everything we published."""
-    store: Store[dict[str, list[str]]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.published")
-    published = await store.async_load() or {}
-    if published and await mqtt.async_wait_for_mqtt_client(hass):
-        for unit, ids in published.items():
+    store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.published")
+    entities, climate_published, _ = parse_store(await store.async_load())
+    if (entities or climate_published) and await mqtt.async_wait_for_mqtt_client(hass):
+        for unit, ids in entities.items():
             for entity_id in ids:
                 base = entity_base(unit, entity_id)
                 for topic in (discovery_topic(unit, entity_id), f"{base}/state", f"{base}/availability"):
+                    await mqtt.async_publish(hass, topic, "", qos=0, retain=True)
+        for unit, objs in climate_published.items():
+            for obj in objs:
+                base = f"{unit}/climate/{obj}"
+                for topic in (climate_discovery_topic(unit, obj), f"{base}/current", f"{base}/target/state",
+                              f"{base}/action", f"{base}/availability"):
                     await mqtt.async_publish(hass, topic, "", qos=0, retain=True)
         await mqtt.async_publish(hass, status_topic, "offline", qos=0, retain=True)
     await store.async_remove()

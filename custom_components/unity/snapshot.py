@@ -59,9 +59,11 @@ def _facts(
     )
 
 
-def entity_facts(hass: HomeAssistant, entity_id: str) -> EntityFacts | None:
+def entity_facts(
+    hass: HomeAssistant, entity_id: str, domains: frozenset[str] = EXPOSED_DOMAINS
+) -> EntityFacts | None:
     """Facts for one entity, or None if it is unknown, disabled or out of scope."""
-    if domain_of(entity_id) not in EXPOSED_DOMAINS:
+    if domain_of(entity_id) not in domains:
         return None
     entry = er.async_get(hass).async_get(entity_id)
     if entry is None or entry.disabled_by:

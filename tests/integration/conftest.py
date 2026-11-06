@@ -53,7 +53,30 @@ def world(hass: HomeAssistant) -> dict[str, str]:
     return ids
 
 
-def make_entry(world: dict[str, str], **overrides: Any) -> MockConfigEntry:
+ROOMMIND = {   # attributes of a real RoomMind room entity (climate.roommind_<area>)
+    "hvac_modes": ["off", "heat", "cool", "heat_cool"], "min_temp": 41, "max_temp": 95,
+    "target_temp_step": 0.5, "preset_modes": ["none", "comfort", "eco", "manual"],
+    "current_temperature": 75, "temperature": 71, "hvac_action": "idle", "preset_mode": "manual",
+    "override_until": None, "friendly_name": "Kitchen", "supported_features": 401,
+}
+
+
+def add_thermostat(hass: HomeAssistant, entity_id: str = "climate.roommind_kitchen", *, area=None,
+                   labels=(), state: str = "heat", **attrs: Any) -> None:
+    add_entity(hass, entity_id, area=area, labels=labels, state=state, **{**ROOMMIND, **attrs})
+
+
+def climate_subentry(world: dict[str, str], *, unit: str = "alpha", obj: str = "kitchen",
+                     entity: str = "climate.roommind_kitchen", **over: Any) -> ConfigSubentryData:
+    data = {
+        "unit": unit, "object": obj, "climate_entity": entity, "min_temp": 64.0, "max_temp": 80.0,
+        "current_sensor": None, "target_sensor": None, "expire_after_minutes": 30, "expire_mode": "preset_none",
+    }
+    data.update(over)
+    return ConfigSubentryData(data=data, subentry_type="climate", title=f"{unit}: {obj}", unique_id=None)
+
+
+def make_entry(world: dict[str, str], extra_subentries=(), **overrides: Any) -> MockConfigEntry:
     data = {
         "hub_status_topic": "ha-unity/hub/status",
         "common_label": world["label_shared"],
@@ -74,6 +97,7 @@ def make_entry(world: dict[str, str], **overrides: Any) -> MockConfigEntry:
                 data={"unit": "beta", "unit_label": world["label_beta"], "unit_floors": [world["floor_beta"]]},
                 subentry_type="child", title="beta", unique_id=None,
             ),
+            *extra_subentries,
         ],
     )
 

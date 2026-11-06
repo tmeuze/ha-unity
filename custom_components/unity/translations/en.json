@@ -93,6 +93,87 @@
       "abort": {
         "reconfigure_successful": "Child updated."
       }
+    },
+    "climate": {
+      "initiate_flow": {
+        "user": "Add thermostat"
+      },
+      "entry_type": "Thermostat",
+      "step": {
+        "user": {
+          "title": "Add thermostat",
+          "description": "Give a child a thermostat for one room. The guest can only change the target temperature, within the range you set.",
+          "data": {
+            "unit": "Child",
+            "climate_entity": "Hub climate entity",
+            "object": "Room name",
+            "min_temp": "Lowest setpoint",
+            "max_temp": "Highest setpoint",
+            "current_sensor": "Current temperature sensor (optional)",
+            "target_sensor": "Target temperature sensor (optional)",
+            "expire_after_minutes": "Release the override after (minutes)",
+            "expire_mode": "When it expires"
+          },
+          "data_description": {
+            "unit": "The child that gets this thermostat.",
+            "climate_entity": "The hub climate entity guests effectively set. For RoomMind choose the **room** entity (`climate.roommind_<room>`), not the deprecated `_override` one. It must carry the child's label (or the common label) and be in an area on that child's floor, like any other entity.",
+            "object": "Optional. Lowercase letters, digits and `_`; part of the MQTT topics. Defaults to the entity's name.",
+            "min_temp": "In the hub's temperature unit. The guest can never set below this.",
+            "max_temp": "In the hub's temperature unit. The guest can never set above this.",
+            "current_sensor": "Leave empty to use the climate entity's own current temperature.",
+            "target_sensor": "Leave empty to use the climate entity's own target temperature.",
+            "expire_after_minutes": "0 keeps a guest setpoint until your controller changes it.",
+            "expire_mode": "What the hub does when the time is up. “End the override” selects the `none` preset, which returns RoomMind and similar controllers to their schedule."
+          }
+        },
+        "reconfigure": {
+          "title": "Edit thermostat",
+          "data": {
+            "unit": "Child",
+            "climate_entity": "Hub climate entity",
+            "object": "Room name",
+            "min_temp": "Lowest setpoint",
+            "max_temp": "Highest setpoint",
+            "current_sensor": "Current temperature sensor (optional)",
+            "target_sensor": "Target temperature sensor (optional)",
+            "expire_after_minutes": "Release the override after (minutes)",
+            "expire_mode": "When it expires"
+          },
+          "data_description": {
+            "unit": "The child that gets this thermostat.",
+            "climate_entity": "The hub climate entity guests effectively set. For RoomMind choose the **room** entity (`climate.roommind_<room>`), not the deprecated `_override` one. It must carry the child's label (or the common label) and be in an area on that child's floor, like any other entity.",
+            "object": "Optional. Lowercase letters, digits and `_`; part of the MQTT topics. Defaults to the entity's name.",
+            "min_temp": "In the hub's temperature unit. The guest can never set below this.",
+            "max_temp": "In the hub's temperature unit. The guest can never set above this.",
+            "current_sensor": "Leave empty to use the climate entity's own current temperature.",
+            "target_sensor": "Leave empty to use the climate entity's own target temperature.",
+            "expire_after_minutes": "0 keeps a guest setpoint until your controller changes it.",
+            "expire_mode": "What the hub does when the time is up. “End the override” selects the `none` preset, which returns RoomMind and similar controllers to their schedule."
+          }
+        }
+      },
+      "error": {
+        "unknown_unit": "Choose one of the configured children.",
+        "invalid_object": "Use lowercase letters, digits and “_” only.",
+        "duplicate_thermostat": "That child already has a thermostat with this room name.",
+        "range": "The highest setpoint must be above the lowest.",
+        "range_outside_entity": "This range is outside what the climate entity accepts.",
+        "expire_needs_mode": "Choose what should happen when the time is up, or set the time to 0.",
+        "expire_needs_minutes": "Set how many minutes the override should last, or choose “Never”.",
+        "no_none_preset": "This climate entity has no `none` preset, so the override cannot be ended this way."
+      },
+      "abort": {
+        "no_children": "Add a child instance first.",
+        "reconfigure_successful": "Thermostat updated."
+      }
+    }
+  },
+  "selector": {
+    "expire_mode": {
+      "options": {
+        "none": "Never (keep the setpoint)",
+        "preset_none": "End the override (select the none preset)"
+      }
     }
   }
 }

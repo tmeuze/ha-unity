@@ -17,6 +17,14 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "blocked_cover_classes": sorted(hub.policy.blocked_cover_classes),
             "area_prefix": hub.area_prefix,
         },
+        "climate_grants": [
+            {
+                "unit": g.unit, "room": g.obj, "entity": g.entity_id, "range": [g.min_temp, g.max_temp],
+                "expire_after_minutes": g.expire_after_minutes, "expire_mode": g.expire_mode,
+                "granted": g.key in hub.climate.granted,
+            }
+            for g in hub.climate.grants.values()
+        ],
         "children": [
             {
                 "unit": s.unit,
@@ -24,6 +32,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
                 "floors": list(hub.children[s.unit].unit_floors),
                 "exposed_count": len(s.exposed),
                 "exposed": list(s.exposed),
+                "climate_granted": list(s.climate),
             }
             for s in hub.status()
         ],
