@@ -97,18 +97,15 @@ def _cover_blocked(facts: EntityFacts, hub: HubPolicy) -> bool:
     return facts.attributes.get("device_class") in hub.blocked_cover_classes
 
 
-def is_exposed(
+def _label_and_floor_match(
     facts: EntityFacts,
     child: ChildPolicy,
     hub: HubPolicy,
     floor_areas: FloorAreas,
 ) -> bool:
-    """Whether ``facts`` may be seen by (and, in command domains, controlled by) ``child``."""
-    if facts.domain not in EXPOSED_DOMAINS:
-        return False
+    """(child label AND area on a child floor) OR (common label AND area on a
+    common floor). A missing area, label or floor list matches nothing."""
     if facts.area_id is None:
-        return False
-    if _cover_blocked(facts, hub):
         return False
     if (
         child.unit_label
@@ -121,6 +118,34 @@ def is_exposed(
         and hub.common_label in facts.labels
         and facts.area_id in _areas(hub.common_floors, floor_areas)
     )
+
+
+def is_exposed(
+    facts: EntityFacts,
+    child: ChildPolicy,
+    hub: HubPolicy,
+    floor_areas: FloorAreas,
+) -> bool:
+    """Whether ``facts`` may be seen by (and, in command domains, controlled by) ``child``."""
+    if facts.domain not in EXPOSED_DOMAINS:
+        return False
+    if _cover_blocked(facts, hub):
+        return False
+    return _label_and_floor_match(facts, child, hub, floor_areas)
+
+
+def is_climate_granted(
+    facts: EntityFacts,
+    child: ChildPolicy,
+    hub: HubPolicy,
+    floor_areas: FloorAreas,
+) -> bool:
+    """Whether a climate entity may back a synthetic thermostat for ``child``.
+
+    Climate is a separate grant (a climate grant in the config) and not one of
+    the generic exposed domains, but it passes the same label-and-floor rule,
+    so labelling and floors stay the single access control."""
+    return facts.domain == "climate" and _label_and_floor_match(facts, child, hub, floor_areas)
 
 
 def exposed_set(

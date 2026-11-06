@@ -8,6 +8,14 @@ The scheme is the one verified live and the one the broker ACL is written for:
     <unit>/<domain>/<object_id>/set            command            (child -> hub)
     <unit>/status                              the child's own birth/will
 
+Climate (a synthetic thermostat per room, see climate.py):
+
+    <unit>/ha/climate/<object>/config          retained discovery
+    <unit>/climate/<object>/current            retained current temperature
+    <unit>/climate/<object>/target/state       retained target temperature
+    <unit>/climate/<object>/action             retained heating/cooling/idle/off
+    <unit>/climate/<object>/target/set         setpoint command (child -> hub)
+
 A child may publish only ``<unit>/+/+/set`` (and ``<unit>/status``), so the
 hub's command subscription is exactly that pattern. The entity of a command
 comes from the topic, never from the payload.
@@ -79,3 +87,37 @@ def parse_command_topic(topic: str, unit: str) -> str | None:
     if not _OBJECT_RE.match(domain) or not _OBJECT_RE.match(obj):
         return None
     return f"{domain}.{obj}"
+
+
+def valid_object(obj: str) -> bool:
+    """A single plain topic level for a climate room slug."""
+    return bool(_OBJECT_RE.match(obj)) and len(obj) <= 64
+
+
+def climate_base(unit: str, obj: str) -> str:
+    """``<unit>/climate/<object>``."""
+    if not valid_object(obj):
+        raise ValueError(f"invalid climate object: {obj!r}")
+    return f"{unit}/climate/{obj}"
+
+
+def climate_discovery_topic(unit: str, obj: str) -> str:
+    if not valid_object(obj):
+        raise ValueError(f"invalid climate object: {obj!r}")
+    return f"{unit}/ha/climate/{obj}/config"
+
+
+def climate_command_filter(unit: str) -> str:
+    """The hub's climate command subscription for one child."""
+    return f"{unit}/climate/+/target/set"
+
+
+def parse_climate_command_topic(topic: str, unit: str) -> str | None:
+    """The room slug a climate command topic addresses, or None if it is not a
+    valid ``<unit>/climate/<object>/target/set`` topic for this unit."""
+    parts = topic.split("/")
+    if len(parts) != 5 or parts[0] != unit or parts[1] != "climate":
+        return None
+    if parts[3] != "target" or parts[4] != "set" or not valid_object(parts[2]):
+        return None
+    return parts[2]

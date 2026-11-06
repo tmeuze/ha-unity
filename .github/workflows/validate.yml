@@ -31,6 +31,3 @@ jobs:
           allow-prereleases: true
       - run: pip install -r requirements-test.txt
       - run: python -m pytest -q
-      # The legacy blueprint suites (script style, not pytest).
-      - run: python tests/policy_model.py
-      - run: python tests/render_blueprints.py

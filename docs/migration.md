@@ -1,9 +1,9 @@
 # Migrating from the blueprints
 
-The integration replaces the discovery, state and command-bridge automations and
-the hub heartbeat automation. It does **not** replace the climate blueprint
-yet. Existing installs are not preserved: migrate once, in this order, so two
-publishers never write the same topics.
+The integration replaces the discovery, state and command-bridge automations,
+the synthetic climate blueprint and the hub heartbeat automation. Existing
+installs are not preserved: migrate once, in this order, so two publishers never
+write the same topics.
 
 1. **Disable** (do not delete yet) the discovery, state and command
    automations for every child, and the hub heartbeat automation.
@@ -17,8 +17,14 @@ publishers never write the same topics.
 4. Within seconds Unity republishes retained discovery, state and availability.
    The retained payloads are the same shape the blueprints produced, so the
    children keep their entities and unique IDs. Check each child.
-5. **Delete** the old automations and the heartbeat. Remove the imported
-   blueprints if you no longer need the climate one.
+5. **Thermostats.** For each synthetic climate automation, add a thermostat
+   (**Add thermostat** on the Unity page) for the same child and room name,
+   using the hub climate entity. The thermostat reads the current temperature,
+   target and action from the climate entity itself, so the separate
+   temperature, target and mode sensors are optional; the expiry action becomes
+   a choice (**End the override**, which selects the `none` preset). The room
+   name must match the old `object` so the child keeps its entity.
+6. **Delete** the old automations, the heartbeat and the imported blueprints.
 
 Things that changed in behaviour:
 
