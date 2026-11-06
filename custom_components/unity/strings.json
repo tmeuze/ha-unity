@@ -116,7 +116,7 @@
           },
           "data_description": {
             "unit": "The child that gets this thermostat.",
-            "climate_entity": "The hub climate entity guests effectively set. For RoomMind choose the **room** entity (`climate.roommind_<room>`), not the deprecated `_override` one. It must carry the child's label (or the common label) and be in an area on that child's floor, like any other entity.",
+            "climate_entity": "The hub climate entity guests effectively set. For RoomMind choose the **room** entity (for example `climate.roommind_kitchen`), not the deprecated `_override` one. It must carry the child's label (or the common label) and be in an area on that child's floor, like any other entity.",
             "object": "Optional. Lowercase letters, digits and `_`; part of the MQTT topics. Defaults to the entity's name.",
             "min_temp": "In the hub's temperature unit. The guest can never set below this.",
             "max_temp": "In the hub's temperature unit. The guest can never set above this.",
@@ -141,7 +141,7 @@
           },
           "data_description": {
             "unit": "The child that gets this thermostat.",
-            "climate_entity": "The hub climate entity guests effectively set. For RoomMind choose the **room** entity (`climate.roommind_<room>`), not the deprecated `_override` one. It must carry the child's label (or the common label) and be in an area on that child's floor, like any other entity.",
+            "climate_entity": "The hub climate entity guests effectively set. For RoomMind choose the **room** entity (for example `climate.roommind_kitchen`), not the deprecated `_override` one. It must carry the child's label (or the common label) and be in an area on that child's floor, like any other entity.",
             "object": "Optional. Lowercase letters, digits and `_`; part of the MQTT topics. Defaults to the entity's name.",
             "min_temp": "In the hub's temperature unit. The guest can never set below this.",
             "max_temp": "In the hub's temperature unit. The guest can never set above this.",
