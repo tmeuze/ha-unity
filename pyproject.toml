@@ -1,6 +1,6 @@
 [project]
 name = "ha-unity"
-version = "0.2.1"
+version = "0.3.0"
 description = "Home Assistant integration: grant selected entities to child instances over MQTT"
 readme = "README.md"
 license = "MIT"
