@@ -13,14 +13,14 @@ instances that must see and control only their own devices, while everything
 privileged (radios, locks, cloud accounts, controllers) stays on one hub.
 Children need nothing installed except their ordinary MQTT integration.
 
-> **Status: 0.2, new.** The integration is covered by 120+ automated tests
-> (policy, per-domain adapters, command validation, revocation, the config
-> flow). It has **not yet been run live**. The behaviour it implements was
-> verified live as blueprints on Home Assistant 2026.9.x with an EMQX broker:
-> discovery, state, availability, light colour/temperature/xy/effects/brightness,
-> fans, commands and the negative tests. Scenes, covers and climate were never
-> run live. Read [docs/security-model.md](docs/security-model.md) before
-> exposing anything that matters.
+> **Status: 0.3, young.** Lights, switches, sensors, fans and the hub status
+> marker have run live on a hub with two children: publishing, the command path
+> and a cross-child negative test. Light colour, colour temperature, xy,
+> effects and fan controls were verified live in the earlier blueprint form that
+> this code was ported from. Over 230 automated tests cover the rest. **Not yet
+> run live:** thermostats (new in 0.3), scenes, covers, and recovery after an
+> unclean MQTT disconnect. Read [docs/security-model.md](docs/security-model.md)
+> before exposing anything that matters.
 
 > **Not ha-propsense.** [ha-propsense](https://github.com/tmeuze/ha-propsense)
 > is a separate project: a rule engine for single instances. Unity may use it
@@ -42,9 +42,14 @@ Children need nothing installed except their ordinary MQTT integration.
   hardcoded service. Nothing about the entity or service is taken from the
   payload, values are clamped, features must be advertised, and **retained
   commands are never executed**.
+- **Thermostats.** Give a child a thermostat for one room, built from one hub
+  climate entity (RoomMind works out of the box). The guest sees the current
+  temperature, the target and what the system is doing, and can change **only
+  the target**, inside a range you set. An optional timer ends the override
+  afterwards.
 - **Clean revocation.** When an entity stops qualifying, is deleted, or its
-  child is removed, Unity clears the retained discovery, state and availability
-  topics. What it published is persisted, so this works across restarts.
+  child is removed, Unity clears the retained topics. What it published is
+  persisted, so this works across restarts.
 - **Self-healing availability.** Unity keeps the hub status marker `online`
   and re-announces it (and the retained data) every time MQTT reconnects, so
   the broker's will message can never leave the children stuck unavailable.
@@ -60,36 +65,41 @@ up there, a broker all instances use, and per-instance broker users (see
 
 1. **HACS** → ⋮ → **Custom repositories** → add
    `https://github.com/tmeuze/ha-unity` as an **Integration** → download
-   **Unity** → restart Home Assistant.
+   **Unity** → restart Home Assistant. Install it on the **hub only**.
 2. **Settings → Devices & services → Add integration → Unity.** Set the
    common label and floors (optional), the hub status topic, the optional area
    prefix regex, and the blocked cover classes.
-3. **Add child instance** (on the Unity entry) for each child: a unit name
-   (lowercase; it becomes the first level of the child's MQTT topics), its
-   label and its floors.
+3. **Add child instance** (button at the top right of the Unity page) for each
+   child: a unit name (lowercase; it becomes the first level of the child's
+   MQTT topics, so it must match what the child and the broker use), its label
+   and its floors.
 4. **On each child**, set up the MQTT integration with discovery prefix
    `<unit>/ha` and birth and will messages on `<unit>/status`. On the **hub**,
    set the MQTT will message to `offline` on the hub status topic, retain on.
 5. Label a test light on the hub, give it an area on the child's floor, and it
    appears on the child.
+6. **Thermostats (optional).** **Add thermostat** on the Unity page: pick the
+   child, the hub climate entity (for RoomMind, the **room** entity
+   `climate.roommind_<room>`), the range, and whether to end the override
+   after some minutes. The climate entity must carry the child's label and sit
+   in an area on its floor, like anything else.
 
 Coming from the blueprints? See [docs/migration.md](docs/migration.md).
 
 ## Documentation
 
-- [Architecture](docs/architecture.md): the design, decisions and phases.
+- [How it works](docs/how-it-works.md): what is published when, the topics, a command step by step.
 - [Security model](docs/security-model.md): the guarantees, and what you must still do.
+- [Testing](docs/testing.md): the offline suite, and a checklist for a real hub.
+- [Architecture](docs/architecture.md): the design, decisions and phases.
 - [Migrating from the blueprints](docs/migration.md).
-- [Blueprints (legacy)](docs/blueprints.md): the previous implementation, kept for climate and as the behavioural reference.
 - [Releasing](RELEASING.md).
 
 ## Limits you should know
 
 - Lights (colour, colour temperature, xy, effects), switches, sensors, binary
-  sensors, fans, scenes and covers. **No locks, alarm panels, cameras or
-  scripts**, on purpose. Media players have no MQTT equivalent.
-- **Climate is not in the integration yet.** The synthetic thermostat still
-  exists as a blueprint; see [docs/blueprints.md](docs/blueprints.md).
+  sensors, fans, scenes, covers, and thermostats. **No locks, alarm panels,
+  cameras or scripts**, on purpose. Media players have no MQTT equivalent.
 - Lights carry on/off, brightness, colour temperature, colour (hs, xy, rgb;
   `rgbw`/`rgbww` appear as rgb) and effects. Transitions and white-channel
   control are not carried. Covers carry open, close, stop and position (no
@@ -100,27 +110,27 @@ Coming from the blueprints? See [docs/migration.md](docs/migration.md).
   whose contents are safe for that child.
 - Covers of the classes garage, gate and door are blocked by default. A cover
   whose state is unavailable is never exposed.
-- A command rate limit is a concurrency cap (10 at a time), not a per-child
-  quota.
+- A **thermostat** gives the guest a target and nothing else: no mode, no
+  preset, no on/off. Values use the hub's temperature unit.
+- Command handling is a concurrency cap (10 at a time), not a per-child quota.
 
 ## Roadmap
 
-See [docs/architecture.md](docs/architecture.md): climate, a child-side
-component with last-known-good fallback, dashboards and their frontend
-resources, and how Unity relates to ha-propsense.
+See [docs/architecture.md](docs/architecture.md): a child-side component with
+last-known-good fallback, dashboards and their frontend resources, and how
+Unity relates to ha-propsense.
 
 ## Development
 
 ```bash
 pyenv virtualenv 3.14.9 ha-unity && pyenv local ha-unity
 pip install -r requirements-test.txt
-python -m pytest -q                  # integration + pure-logic tests
-python tests/policy_model.py         # legacy blueprint suites
-python tests/render_blueprints.py
+python -m pytest -q
 ```
 
-`policy.py`, `adapters.py` and `topics.py` are pure Python with no Home
-Assistant imports; `snapshot.py` and `manager.py` are the glue.
+`policy.py`, `adapters.py`, `climate.py` and `topics.py` are pure Python with no
+Home Assistant imports; `snapshot.py`, `manager.py` and `climate_runtime.py`
+are the glue.
 
 ## License
 

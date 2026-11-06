@@ -19,11 +19,11 @@ ROOMMIND = {
 
 def F(state="heat", **over):
     attrs = {**ROOMMIND, **over}
-    return EntityFacts("climate.roommind_l1_kitchen", area_id="a", state=state, attributes=attrs,
+    return EntityFacts("climate.roommind_kitchen", area_id="a", state=state, attributes=attrs,
                        friendly_name=attrs.get("friendly_name"))
 
 
-GRANT = cl.ClimateGrant("alpha", "kitchen", "climate.roommind_l1_kitchen", 64, 80,
+GRANT = cl.ClimateGrant("alpha", "kitchen", "climate.roommind_kitchen", 64, 80,
                         expire_after_minutes=30, expire_mode=cl.EXPIRE_PRESET_NONE)
 
 
@@ -93,7 +93,7 @@ def call(payload, facts=None, grant=GRANT):
 
 
 def test_valid_command_calls_set_temperature_only():
-    assert call("72") == ("climate", "set_temperature", "climate.roommind_l1_kitchen", {"temperature": 72.0})
+    assert call("72") == ("climate", "set_temperature", "climate.roommind_kitchen", {"temperature": 72.0})
     assert call(" 72.5 ")[3] == {"temperature": 72.5}
 
 

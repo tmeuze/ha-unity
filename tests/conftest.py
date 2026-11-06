@@ -1,7 +1,4 @@
-"""Shared fixtures. The two script-style suites for the blueprints are not
-pytest tests; run them directly (python tests/policy_model.py, ...)."""
-collect_ignore = ["policy_model.py", "render_blueprints.py"]
-
+"""Shared fixtures."""
 import pytest
 
 

@@ -2,10 +2,9 @@
 
 Status: the **hub role is built (0.2.0)**; the rest is proposal. What exists is
 listed under "Implemented"; everything else in this document is design only.
-The blueprints in `blueprints/` are legacy; they remain for climate and as the
-behavioural reference.
+The earlier blueprints have been removed; the integration is the only implementation.
 
-## Implemented (0.2.0, not yet run live)
+## Implemented (0.3.0)
 
 - Hub config entry plus one **config subentry per child** (UI: add, edit,
   delete). No automations or blueprints are needed.
@@ -16,16 +15,22 @@ behavioural reference.
   persisted revocation (stale topics are cleaned up); policy re-checked on every
   command; retained commands never executed; hub marker re-announced on every
   MQTT reconnect.
+- **Thermostats** (0.3): `climate.py` (pure) and `climate_runtime.py`. One hub
+  climate entity granted to one child as a config subentry; the guest changes
+  only the target, clamped; optional release of the override by selecting the
+  `none` preset after N minutes, with the deadline persisted across restarts.
+  Works with RoomMind (its room entity carries the current temperature, target
+  and `hvac_action`).
 - Diagnostics. HACS packaging and CI.
 
-Not implemented yet: climate (still a blueprint), the child-side component and
+Not implemented yet: the child-side component and
 last-known-good pipeline, dashboards and resource manifests, a per-child status
 sensor, any PropSense integration.
 
 ## Decisions so far
 
 - Unity becomes a **HACS custom integration** built into this repository, after
-  it has been tested. The blueprints remain as the lightweight option.
+  it has been tested.
 - One integration, two roles: **hub** (publishes) and **child** (receives).
 - The hub-to-child **communication plane stays MQTT**, and the integration
   owns it (decided 2026-11-05): users configure a hub and children in the UI
@@ -67,7 +72,7 @@ Boundary to keep:
   grant as one of its action types.
 - Option B, extension: Unity ships inside PropSense as an optional module.
 - Until that is settled, Unity keeps its own simple selection (unit label AND
-  unit floor, or common label AND common floor), exactly as the blueprints do
+  unit floor, or common label AND common floor), exactly as the integration does
   today.
 
 ## Roles
@@ -198,20 +203,23 @@ the boundary above is settled).
 
 ## Phases
 
-1. **Baseline** (now): the blueprints, their tests, and live verification of the
-   remaining domains. Exit: the "unverified" list is empty or explicitly
-   deferred.
-2. **Spikes**: confirm how a child can apply a dashboard and register a
+1. **Baseline** (done): the first implementation was blueprints, verified live
+   for lights (colour, temperature, xy, effects), fans and commands.
+2. **Skeleton and parity** (done, 0.2 to 0.3): the hub integration with the
+   pure core, config flow with subentries, the MQTT plane, persisted
+   revocation, reconnect re-announce, thermostats. Live: lights, switches,
+   sensors, fans and the command path ran on a real hub and two children.
+   Still to run live: thermostats, scenes, covers, recovery after an unclean
+   disconnect.
+3. **Spikes** (next): confirm how a child can apply a dashboard and register a
    resource, and whether HACS exposes anything for remote install. Exit: each
    claim in "Dashboards and frontend resources" is verified or dropped.
-3. **Skeleton**: `custom_components/<domain>/`, `hacs.json`, config flow for
-   hub and child, the envelope, and the status message. One domain (lights)
-   end to end behind the same behaviour as the blueprint.
-4. **Parity**: remaining domains, stale-discovery cleanup, the command path.
-5. **Dashboards**: manifest, ID mapping, allowlist, the stage/commit/rollback
-   pipeline, status reporting.
+4. **Child side**: the child component and the stage/validate/commit/rollback
+   pipeline with last-known-good fallback and status reporting.
+5. **Dashboards**: manifest, ID mapping, allowlist, status reporting.
 6. **Decision on PropSense**: dependency or extension, once both have settled
-   interfaces.
+   interfaces. Current recommendation: Unity depends on it for selection
+   through its extension API, hub side only.
 
 ## Open questions
 

@@ -2,8 +2,7 @@
 
 Unity is installed through HACS from this repository.
 
-1. Run the tests: `python -m pytest -q`, `python tests/policy_model.py` and
-   `python tests/render_blueprints.py` (in the `ha-unity` pyenv environment).
+1. Run the tests: `python -m pytest -q` (in the `ha-unity` pyenv environment).
 2. Bump the version in `custom_components/unity/manifest.json` and
    `pyproject.toml`, and update `CHANGELOG.md`.
 3. Commit, tag and push:
@@ -15,7 +14,5 @@ Unity is installed through HACS from this repository.
    releases as versions; without a release it tracks the default branch.
 
 CI (`.github/workflows/validate.yml`) runs hassfest, the HACS validation and the
-tests on every push.
-
-The blueprint import links in `docs/blueprints.md` and each blueprint's
-`source_url` point at `main`; `scripts/set_repo.py` rewrites them if you fork.
+tests on every push. The HACS validation needs the brand icons in
+`custom_components/unity/brand/`.

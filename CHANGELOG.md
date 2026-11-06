@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0
+- New: **thermostats**. A hub climate entity (RoomMind works out of the box) is
+  granted to a child as a synthetic MQTT thermostat, added with **Add
+  thermostat** on the Unity page. The guest sees the current temperature, the
+  target and the action, and can change only the target, clamped to your range
+  and to the entity's own range. Same label-and-floor policy as every entity,
+  re-checked on every command; retained setpoints are never executed.
+- Optional override release: after N minutes the hub selects the `none` preset
+  (how RoomMind returns to its schedule). The deadline is persisted; one that
+  passed while Home Assistant was off is released at startup.
+- Thermostat state, availability and revocation are persisted and cleaned up
+  like every other entity.
+- Diagnostics list thermostats and whether each is granted.
+- Removed: the blueprints, their legacy tests, the import-link script and the
+  heartbeat example. The ACL example is now checked by `tests/test_acl_example.py`.
+- Docs: how it works, testing checklist, migration (climate) updated.
+- Not yet run live: thermostats.
+
 ## 0.2.1
 - Fix: an area prefix regex entered without its trailing space no longer leaves a leading space in the child's suggested area (the result is trimmed).
 - The area prefix field description shows the regex example in code formatting.
