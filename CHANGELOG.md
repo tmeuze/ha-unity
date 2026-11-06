@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+- Fix: an area prefix regex entered without its trailing space no longer leaves a leading space in the child's suggested area (the result is trimmed).
+- The area prefix field description shows the regex example in code formatting.
+
 ## 0.2.0
 - New: Unity is a HACS integration. A hub config entry plus one subentry per
   child replaces the discovery, state and command-bridge automations and the

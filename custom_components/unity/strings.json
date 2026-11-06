@@ -15,7 +15,7 @@
           "common_label": "Entities with this label are shown to every child, if they are in an area on a common floor.",
           "common_floors": "Floors the common label is valid on. The label and a floor are both required.",
           "hub_status_topic": "Retained topic that reads “online” while this hub is up. Set your MQTT will message to “offline” on the same topic.",
-          "area_prefix_regex": "Optional regex for a prefix on hub area names that must not reach a child (for example ^L[0-9]+ turns “L2 Kitchen” into “Kitchen”).",
+          "area_prefix_regex": "Optional regex for a prefix on hub area names that must not reach a child. For example `^L[0-9]+ ` turns “L2 Kitchen” into “Kitchen”. A trailing space is optional; leftover spaces are trimmed.",
           "blocked_cover_classes": "Covers of these device classes are never shown to a child."
         }
       }
@@ -39,6 +39,13 @@
           "hub_status_topic": "Hub status topic",
           "area_prefix_regex": "Area prefix to strip",
           "blocked_cover_classes": "Blocked cover classes"
+        },
+        "data_description": {
+          "common_label": "Entities with this label are shown to every child, if they are in an area on a common floor.",
+          "common_floors": "Floors the common label is valid on. The label and a floor are both required.",
+          "hub_status_topic": "Retained topic that reads “online” while this hub is up. Set your MQTT will message to “offline” on the same topic.",
+          "area_prefix_regex": "Optional regex for a prefix on hub area names that must not reach a child. For example `^L[0-9]+ ` turns “L2 Kitchen” into “Kitchen”. A trailing space is optional; leftover spaces are trimmed.",
+          "blocked_cover_classes": "Covers of these device classes are never shown to a child."
         }
       }
     },

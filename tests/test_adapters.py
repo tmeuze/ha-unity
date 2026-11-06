@@ -61,6 +61,14 @@ def test_suggested_area(area, expect):
     assert d["device"].get("suggested_area") == expect
 
 
+def test_suggested_area_is_trimmed_when_the_prefix_regex_has_no_trailing_space():
+    """A prefix typed without its trailing space must not leave " Kitchen"."""
+    n = ad.NamingContext(area_prefix=r"^L[0-9]+", common_area_names=())
+    assert disc(F("light.k", area="L2 Kitchen", fname="K"), n)["device"]["suggested_area"] == "Kitchen"
+    # a prefix that consumes the whole name leaves nothing to suggest
+    assert "suggested_area" not in disc(F("light.k", area="L2", fname="K"), n)["device"]
+
+
 def test_empty_prefix_strips_nothing_and_bad_regex_is_ignored():
     n = ad.NamingContext(area_prefix="", common_area_names=())
     assert "suggested_area" not in disc(F("light.k", area="L2 Kitchen", fname="K"), n)["device"]

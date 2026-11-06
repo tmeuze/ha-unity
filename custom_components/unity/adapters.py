@@ -97,7 +97,7 @@ def suggested_area(facts: EntityFacts, naming: NamingContext) -> str | None:
     if naming.area_prefix:
         try:
             if re.match(naming.area_prefix, name):
-                return re.sub(naming.area_prefix, "", name) or None
+                return re.sub(naming.area_prefix, "", name).strip() or None
         except re.error:
             pass
     if name in naming.common_area_names:
